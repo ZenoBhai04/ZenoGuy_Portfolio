@@ -1,9 +1,8 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import LoadingScreen from "@/components/loading-screen";
-import Ballpit from "@/components/Ballpit";
+import Orb from "@/components/ui/Orb";
 
 export default function ClientLayout({
   children,
@@ -15,7 +14,6 @@ export default function ClientLayout({
 
   useEffect(() => {
     setIsHydrated(true);
-
     const minLoadingTime = 2000;
     const startTime = Date.now();
 
@@ -39,34 +37,35 @@ export default function ClientLayout({
   if (!isHydrated) return null;
 
   return (
-    <div className="relative min-h-screen">
-    {/* ================= BALLPIT BACKGROUND ================= */}
-    <div className="fixed inset-0 z-0 pointer-events-none">
-    <Ballpit
-    className="w-full h-full"
-    count={50}
-    gravity={0.0}
-    friction={1.00}
-    wallBounce={0.95}
-    followCursor
-    />
-    </div>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* ================= ORB (INTERACTIVE BACKGROUND) ================= */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[6000px]">
+          <Orb
+            hoverIntensity={0.9}
+            rotateOnHover
+            hue={0}
+            forceHoverState={false}
+          />
+        </div>
+      </div>
 
-    {/* ================= CONTENT (ABOVE BALLPIT) ================= */}
-    <div className="relative z-10">
-    <AnimatePresence mode="wait">
-    {isLoading && (
-      <LoadingScreen
-      key="loading"
-      onLoadingComplete={() => setIsLoading(false)}
-      />
-    )}
-    </AnimatePresence>
+      {/* ================= CONTENT LAYER ================= */}
+      {/* Remove min-h-screen and let content determine height */}
+      <div className="relative z-10">
+        <AnimatePresence mode="wait">
+          {isLoading && (
+            <LoadingScreen
+              key="loading"
+              onLoadingComplete={() => setIsLoading(false)}
+            />
+          )}
+        </AnimatePresence>
 
-    <AnimatePresence mode="wait">
-    {!isLoading && <div key="content">{children}</div>}
-    </AnimatePresence>
-    </div>
+        <AnimatePresence mode="wait">
+          {!isLoading && <div key="content">{children}</div>}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
