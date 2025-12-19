@@ -1,7 +1,7 @@
 "use client";
 
-
 import { useRef, useEffect } from 'react';
+import { useTheme } from 'next-themes';
 import {
   Clock as e,
   PerspectiveCamera as t,
@@ -712,6 +712,11 @@ function createBallpit(e, t = {}) {
     setCount(e) {
       initialize({ ...s.config, count: e });
     },
+    setColors(e) {
+      if (s) {
+        s.setColors(e);
+      }
+    },
     togglePause() {
       c = !c;
     },
@@ -722,23 +727,68 @@ function createBallpit(e, t = {}) {
   };
 }
 
-const Ballpit = ({ className = '', followCursor = true, ...props }) => {
+// Theme color palettes
+const THEME_COLORS = {
+  dark: [
+    0x1a1a1a, // Dark charcoal
+    0x2d2d2d, // Charcoal
+    0x404040, // Medium gray
+    0x525252, // Gray
+    0x666666  // Light gray
+  ],
+  light: [
+    0xffffff, // Pure white
+    0xf5f5f5, // Off white
+    0xe8e8e8, // Light gray
+    0xd4d4d4, // Medium light gray
+    0xc0c0c0  // Silver gray
+  ]
+};
+
+const Ballpit = ({ 
+  className = '', 
+  followCursor = true,
+  colorsDark,
+  colorsLight,
+  ...props 
+}) => {
   const canvasRef = useRef(null);
   const spheresInstanceRef = useRef(null);
+  const { theme } = useTheme();
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    spheresInstanceRef.current = createBallpit(canvas, { followCursor, ...props });
+    const isDark = theme === 'dark';
+    const themeColors = isDark 
+      ? (colorsDark || THEME_COLORS.dark)
+      : (colorsLight || THEME_COLORS.light);
+
+    spheresInstanceRef.current = createBallpit(canvas, { 
+      followCursor,
+      colors: themeColors,
+      ...props 
+    });
 
     return () => {
       if (spheresInstanceRef.current) {
         spheresInstanceRef.current.dispose();
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [followCursor, colorsDark, colorsLight, props]);
+
+  // Update colors when theme changes
+  useEffect(() => {
+    if (spheresInstanceRef.current && theme) {
+      const isDark = theme === 'dark';
+      const themeColors = isDark 
+        ? (colorsDark || THEME_COLORS.dark)
+        : (colorsLight || THEME_COLORS.light);
+      
+      spheresInstanceRef.current.setColors(themeColors);
+    }
+  }, [theme, colorsDark, colorsLight]);
 
   return <canvas className={className} ref={canvasRef} style={{ width: '100%', height: '100%' }} />;
 };
